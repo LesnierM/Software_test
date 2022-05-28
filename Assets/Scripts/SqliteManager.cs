@@ -24,6 +24,10 @@ public class SqliteManager
     {
         _connection.Clone();
     }
+    /// <summary>
+    /// Gets all tasks form database.
+    /// </summary>
+    /// <returns>A list of taskdata.</returns>
     public List<TaskData> getTasksGroups()
     {
         List<TaskData> _tasks=new List<TaskData>();
@@ -37,16 +41,21 @@ public class SqliteManager
     /// Saves the task in the database.
     /// </summary>
     /// <param name="taskGroup">The task to insert.</param>
-    /// <returns>The id of thelas inserted data or -1 if failed.</returns>
+    /// <returns>The id of the last inserted data or -1 if failed.</returns>
     public int insertTaskGroup(TaskData taskGroup)
     {
-        return insertUpdateData($"INSERT INTO tasks (tasklist)VALUES('{taskGroup.Tasks}')");
+        return insertUpdteData($"INSERT INTO tasks (tasklist)VALUES('{taskGroup.Tasks}')");
     }
+    /// <summary>
+    /// Updates the task group.
+    /// </summary>
+    /// <param name="taskData">The group to update.</param>
+    /// <returns>TRUE if the update is successfully done, FALSE otherwise.</returns>
     public int updateTaskGroup(TaskData taskData)
     {
-        return insertUpdateData($"UPDATE tasks SET tasklist='{taskData.Tasks}' WHERE id={taskData.Id}");
+        return insertUpdteData($"UPDATE tasks SET tasklist='{taskData.Tasks}' WHERE id={taskData.Id}");
     }
-    int insertUpdateData(string query)
+    int insertUpdteData(string query)
     {
         int _id = -1;
         SqliteDataReader _reader = null;

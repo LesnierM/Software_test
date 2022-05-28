@@ -25,12 +25,20 @@ public class TaskData
         addTask(task);
         _toggle = null;
     }
+    #endregion
+
+    /// <summary>
+    /// Add a taks to the list.
+    /// </summary>
+    /// <param name="newTask">The task to add.</param>
     internal void addTask(string newTask)
     {
         _tasks +="\n"+ newTask;
     }
-    #endregion
-
+    /// <summary>
+    /// Edit a task.
+    /// </summary>
+    /// <param name="taskLine">The task line index to edit.</param>
     internal void editTask(TaskLine taskLine)
     {
         string[] _oldtasksList = TaskList;

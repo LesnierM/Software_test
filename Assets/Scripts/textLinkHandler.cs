@@ -14,10 +14,9 @@ public class textLinkHandler : MonoBehaviour, IPointerMoveHandler
     public void OnPointerMove(PointerEventData eventData)
     {
         if (isCursorOnLink(eventData.position))
-            Cursor.SetCursor(_handCursor, Vector2.zero, CursorMode.Auto);
+            TaskManager.Instance.showMouseCursor();
         else
-            Cursor.SetCursor(null, Vector2.zero, CursorMode.Auto);
-
+            TaskManager.Instance.showDefaultCursor();
     }
     bool isCursorOnLink(Vector2 mousePosition)
     {
@@ -25,3 +24,4 @@ public class textLinkHandler : MonoBehaviour, IPointerMoveHandler
             return _linkIndex != -1;
     }
 }
+

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
-using System;
 using TMPro;
 using static TMPro.TMP_InputField;
 
@@ -22,19 +21,40 @@ public class tasksGroupItem : MonoBehaviour
     [SerializeField] TextMeshProUGUI _submitButtonText;
     [SerializeField] Button[] _buttons;
     [SerializeField] Button _submitButton;
-    [Header("String formatting")]
-    [SerializeField]List<StringFormattingData> _stringFormattData;
+    /// <summary>
+    /// Indicates if this is the main task adder.Which doesnt have any tasklist is only the one creating other taskgroups.
+    /// </summary>
      bool _isFirstTaskGroup;
+    /// <summary>
+    /// Controlles the visibility of the task group.
+    /// </summary>
     TaskStates _currentState;
+    /// <summary>
+    /// To controll transparency of object to disable when needed.
+    /// </summary>
     CanvasGroup[] _buttonCanvasGroups;
+    /// <summary>
+    /// Just a correction because layout controllers and 
+    /// content fitters are incompatible between them when updating so i 
+    /// have to desable this and reenable to refresh auto layout functions.
+    /// (I dindt find a better way to do it.need more experience with canvas tasks.)
+    /// </summary>
     VerticalLayoutGroup _LayoutGroup;
+    /// <summary>
+    /// The task group it represents.
+    /// </summary>
     [HideInInspector]
     public TaskData _taskData;
+    /// <summary>
+    /// The editing line index of task.
+    /// </summary>
     int _editingLineId;
-    bool _openLinkTag;
-    bool _formattedStringDetected;
-    string _lastStringBeforeChange=string.Empty;
+    /// <summary>
+    /// To controll the submit button texts.
+    /// </summary>
     SubmitButtonStates _submitButtonState;
+
+    #region Mono Methods
     private void Awake()
     {
         setButtonsCanvasGroups();
@@ -42,91 +62,46 @@ public class tasksGroupItem : MonoBehaviour
     }
     private void OnEnable()
     {
-        _inputField.onValidateInput += onInputValueChange;
-        enableInputOnValueChangeCallback();
+        _inputField.onValueChanged.AddListener(delegate { onInputValueChange(); });
     }
     private void OnDisable()
     {
-        _inputField.onValidateInput -= onInputValueChange;
-        disableInputOnVlueChangeCallback();
-    }
-    private void Update()
-    {
-        
-    }
-
-    #region Methods
-    private void disableInputOnVlueChangeCallback()
-    {
         _inputField.onValueChanged.RemoveAllListeners();
     }
-    private void enableInputOnValueChangeCallback()
-    {
-        _inputField.onValueChanged.AddListener(delegate { onInputValueChange(); });
-    }
+    #endregion
+
+    #region Methods
+    /// <summary>
+    /// Called everytime the input text changes.
+    /// </summary>
     void onInputValueChange()
     {
-        if (_formattedStringDetected)
-        {
-            _inputField.stringPosition = _inputField.text.Length;
-            _formattedStringDetected = false;
-        }
-        clearEmptyInputTags();
         if (!isEditingTask)
             changeButtonsState(!isInputFieldEmpty);
         changeSubmitButtonText(submitButtonCorrectState);
-        Debug.Log(_inputField.text);
-        _lastStringBeforeChange = _inputField.text;
     }
-    private void clearEmptyInputTags()
-    {
-        bool _checkCharacters = false;
-        foreach (var stringFormat in _stringFormattData)
-        {
-            if (_lastStringBeforeChange.Contains(stringFormat.Char))
-            {
-                _checkCharacters = true;
-                break;
-            }
-        }
-        //check de diference of the two string if is missing any key char them locate the tags adn delete them
-        if (_checkCharacters)
-        {
-            string _inputString = _inputField.text;
-            for (int i = 0; i < _lastStringBeforeChange.Length; i++)
-            {
-                char _oldChar = _lastStringBeforeChange[i];
-                if (isKeyChar(_oldChar)) {
-                    if (i==_inputString.Length||_oldChar != _inputString[i])
-                    {
-                        int _linkStartIndex = _inputString.LastIndexOf("<link", i);
-                        disableInputOnVlueChangeCallback();
-                        _inputField.text = _inputString.Remove(_linkStartIndex, i - _linkStartIndex);
-                        enableInputOnValueChangeCallback();
-                        _openLinkTag = false;
-                    }
-                }
-            }
-        }
-    }
-
+    /// <summary>
+    /// Initializes data.
+    /// </summary>
+    /// <param name="taskData">Task group.</param>
+    /// <param name="isFirstTaskGroup">If it is the main task adder or not.</param>
     internal void setData(TaskData taskData,bool isFirstTaskGroup)
     {
         _isFirstTaskGroup = isFirstTaskGroup;
         _taskData = taskData;
         addTasks();
-        changeTaskState(TaskStates.Close);
+        changeTaskGroupState(TaskStates.Close);
     }
-    private void addTasks(bool clearList=false)
+    /// <summary>
+    /// Fill the task group task list.
+    /// </summary>
+    private void addTasks()
     {
-        if (clearList)
-        {
-            clearTasksList();
-        }
+        clearTasksList();
         string[] _tasks = _taskData.TaskList;
         for (int i = 0; i < _tasks.Length; i++)
         {
-                addTaskToList(_tasks[i], i);
+            addTaskToList(_tasks[i], i);
         }
     }
     /// <summary>
@@ -139,19 +114,30 @@ public class tasksGroupItem : MonoBehaviour
             Destroy(task.gameObject);
         }
     }
+    /// <summary>
+    /// instantiate task object and initializes its data.
+    /// </summary>
+    /// <param name="_task">The task to add to the task group task list</param>
+    /// <param name="lineIndex">The line index to be able to edit it later.</param>
     private void addTaskToList(string _task, int lineIndex)
     {
         Instantiate(_taskItem, _taskListContainer).setData(_task, lineIndex, this);
     }
+    /// <summary>
+    /// When pressed.
+    /// </summary>
     public void OnSubmit()
     {
         if (isInputFieldEmpty)
         {
-            closeTaskList();
+            closeTaskGroup();
             return;
         }
+        //the result of database operation
         bool _operationResult = false;
+        //the temporal taskgroup in case database operation fails.
         TaskData _tempTaskData = null;
+        //perform the correct action
         switch (_submitButtonState)
         {
             case SubmitButtonStates.Add:
@@ -185,17 +171,20 @@ public class tasksGroupItem : MonoBehaviour
                 {
                     _taskData = _tempTaskData;
                     _operationResult = true;
-                    addTasks(true);
+                    addTasks();
                 }
                 break;
         }
         //close taskgroup
         if(_operationResult)
         {
-            closeTaskList();
+            closeTaskGroup();
             clearInputField();
         }
     }
+    /// <summary>
+    /// Load the canvasgroup of objects that need disable.
+    /// </summary>
     private void setButtonsCanvasGroups()
     {
         _buttonCanvasGroups = new CanvasGroup[_buttons.Length];
@@ -204,64 +193,57 @@ public class tasksGroupItem : MonoBehaviour
             _buttonCanvasGroups[i] = _buttons[i].GetComponent<CanvasGroup>();
         }
     }
-    public char onInputValueChange(string a, int position, char character)
-    {
-        string _stringToAdd = string.Empty;
-        if (!_openLinkTag)
-        {
-            if (char.Equals(character, '@'))
-            {
-                _openLinkTag = true;
-                StringFormattingData _stringFormattData = getstringFormattData(StringFormattingKeywords.At_Sign);
-                _formattedStringDetected = true;
-                _stringToAdd = $"<link=''><color=#{ColorUtility.ToHtmlStringRGBA(_stringFormattData.Color)}>@";
-                _lastStringBeforeChange = _inputField.text + _stringToAdd;
-                _inputField.text += _stringToAdd;
-                character = new char();
-            }
-        }
-        if (character == ' ')
-        {
-            if (_openLinkTag)
-                _stringToAdd = "</color></link> ";
-            else
-                _stringToAdd = " ";
-            _lastStringBeforeChange = _inputField.text + _stringToAdd;
-            _inputField.text += _stringToAdd;
-            _formattedStringDetected = true;
-            _openLinkTag = false;
-            character = new char();
-        }
-        return character;
-    }
+    /// <summary>
+    /// Changes sumbmit button text.
+    /// </summary>
+    /// <param name="state">The text state to set.</param>
     private void changeSubmitButtonText(SubmitButtonStates state)
     {
         _submitButtonText.text =state.ToString();
     }
+    /// <summary>
+    /// Wait for changes to take place to reenable tasklayout to aviod the incopability with container fitter component.
+    /// (The best way i could find).
+    /// </summary>
+    /// <returns></returns>
     IEnumerator fixeObjectsAligment()
     {
         yield return new WaitForEndOfFrame();
         _LayoutGroup.enabled = true;
     }
+    /// <summary>
+    /// open the task group and enable it to edit selected task item.
+    /// </summary>
+    /// <param name="taskIndex">The index of the task item to be edited.</param>
     public void editTask(int taskIndex)
     {
         changeButtonsState(true);
         _editingLineId = taskIndex;
         _inputField.text = _taskData.TaskList[_editingLineId];
-        changeTaskState(TaskStates.Open);
+        changeTaskGroupState(TaskStates.Open);
     }
+    /// <summary>
+    /// Prepare task group for adding a new task item to the group.
+    /// </summary>
     public void addTask()
     {
         _editingLineId = -1;
         changeButtonsState(false);
-        changeTaskState(TaskStates.Open);
+        changeTaskGroupState(TaskStates.Open);
         clearInputField();
     }
+    /// <summary>
+    /// Executed when input field is clicked.
+    /// </summary>
     public void onInputFieldClicked()
     {
         if (_currentState == TaskStates.Close)
             addTask();
     }
+    /// <summary>
+    /// Activates or deactivates the buttons and picture when input field is empty or not.
+    /// </summary>
+    /// <param name="interactable">TRUE ebales the interaction with buttons FALSE disables it</param>
     private void changeButtonsState(bool interactable)
     {
         float _alpha = interactable ? 1 : _buttonCanvasDeactivationValue;
@@ -273,27 +255,46 @@ public class tasksGroupItem : MonoBehaviour
         }
         changePictureState(_alpha);        
     }
+    /// <summary>
+    /// Enable or disable picture.
+    /// </summary>
+    /// <param name="_alpha">the alpha value set in the others object disabled or enabled.</param>
     private void changePictureState(float _alpha)
     {
         var _color = _PictureImage.color;
         _color.a = _alpha;
         _PictureImage.color = _color;
     }
-    private void changesubmitButtonActivationState(bool activate)
+    /// <summary>
+    /// Activates or deactivates the submit button.
+    /// </summary>
+    /// <param name="activate"></param>
+    private void changeSubmitButtonActivationState(bool activate)
     {
         _submitButton.interactable = activate;
     }
-    public void closeTaskList()
+    /// <summary>
+    /// Closes the task group
+    /// </summary>
+    public void closeTaskGroup()
     {
-        changeTaskState(TaskStates.Close);
+        changeTaskGroupState(TaskStates.Close);
         clearInputField();
     }
+    /// <summary>
+    /// Clears input field.
+    /// </summary>
     private void clearInputField()
     {
         _inputField.text = "";
     }
-    void changeTaskState(TaskStates state)
+    /// <summary>
+    /// Changes task group state (open it or close it).
+    /// </summary>
+    /// <param name="state">The state to set to tsak group.</param>
+    void changeTaskGroupState(TaskStates state)
     {
+        //as i previous mentioned this avoid some visual problems when resizing objects when all the resizing finish i enable it again.
         _LayoutGroup.enabled = false;
         _currentState = state;
         switch (_currentState)
@@ -317,19 +318,12 @@ public class tasksGroupItem : MonoBehaviour
         }
         StartCoroutine(fixeObjectsAligment());
     }
-    StringFormattingData getstringFormattData(StringFormattingKeywords keyWord) => _stringFormattData.Find(_stringFormatt=>_stringFormatt.FormattKeyword==keyWord);
-    public bool isKeyChar(char charact)
-    {
-        foreach (var stringFormat in _stringFormattData)
-        {
-            if (charact == stringFormat.Char)
-                return true;
-        }
-        return false;
-    }
     #endregion
 
     #region Proiperties
+    /// <summary>
+    /// The text the sumbmit button should show.
+    /// </summary>
     private SubmitButtonStates submitButtonCorrectState
     {
         get
@@ -339,31 +333,18 @@ public class tasksGroupItem : MonoBehaviour
             else
             {
                 _submitButtonState = SubmitButtonStates.Save;
-                changesubmitButtonActivationState(!isInputFieldEmpty);
+                changeSubmitButtonActivationState(!isInputFieldEmpty);
             }
             return _submitButtonState;
         }
     }
+    /// <summary>
+    /// Whenever the input field is empty or not.
+    /// </summary>
     public bool isInputFieldEmpty => _inputField.text.Length == 0;
+    /// <summary>
+    /// Whenever is editing task or adding.
+    /// </summary>
     public bool isEditingTask => _editingLineId != -1;
     #endregion
-}
-enum SubmitButtonStates
-{
-    None,
-    Ok,
-    Add,
-    Save
-}
-[Serializable]
- struct StringFormattingData
-{
-    public StringFormattingKeywords FormattKeyword;
-    public Color Color;
-    public Char Char;
-}
-enum StringFormattingKeywords
-{
-    None,
-    At_Sign
 }

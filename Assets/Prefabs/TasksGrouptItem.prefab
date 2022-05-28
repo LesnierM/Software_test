@@ -125,7 +125,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 3167065539862931113}
         m_TargetAssemblyTypeName: tasksGroupItem, Assembly-CSharp
-        m_MethodName: closeTaskList
+        m_MethodName: closeTaskGroup
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -762,10 +762,6 @@ MonoBehaviour:
   - {fileID: 2837557326167784568}
   - {fileID: 1107247101121174761}
   _submitButton: {fileID: 553812994733734243}
-  _stringFormattData:
-  - FormattKeyword: 1
-    Color: {r: 0.08561225, g: 0.49056602, b: 0.052758954, a: 1}
-    Char: 64
 --- !u!1 &3167065539873696671
 GameObject:
   m_ObjectHideFlags: 0
@@ -860,15 +856,15 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 73.27
+  m_fontSize: 45
   m_fontSizeBase: 73.27
   m_fontWeight: 400
-  m_enableAutoSizing: 0
+  m_enableAutoSizing: 1
   m_fontSizeMin: 0
-  m_fontSizeMax: 0
+  m_fontSizeMax: 45
   m_fontStyle: 2
   m_HorizontalAlignment: 1
-  m_VerticalAlignment: 256
+  m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
   m_wordSpacing: 0
@@ -998,7 +994,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3245ec927659c4140ac4f8d17403cc18, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_HorizontalFit: 0
+  m_HorizontalFit: 2
   m_VerticalFit: 2
 --- !u!1 &3167065540133956607
 GameObject:
@@ -1264,15 +1260,15 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 73.27
+  m_fontSize: 45
   m_fontSizeBase: 73.27
   m_fontWeight: 400
-  m_enableAutoSizing: 0
+  m_enableAutoSizing: 1
   m_fontSizeMin: 0
-  m_fontSizeMax: 0
+  m_fontSizeMax: 45
   m_fontStyle: 0
   m_HorizontalAlignment: 1
-  m_VerticalAlignment: 256
+  m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
   m_wordSpacing: 0
